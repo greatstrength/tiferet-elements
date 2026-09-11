@@ -1,7 +1,7 @@
-# Binding — Tiferet MUI
+# Binding — Tiferet Elements
 
-**Project:** Tiferet MUI
-**Repository:** https://github.com/greatstrength/tiferet-mui
+**Project:** Tiferet Elements
+**Repository:** https://github.com/greatstrength/tiferet-elements
 
 This file is the local phone book, not the process. Skills should read `docs/collab/binding.md` in whatever repo they are standing in. If that file is missing, they fall back to the flagship copy at https://github.com/greatstrength/tiferet/blob/main/docs/collab/binding.md, whose process guides (`docs/collab/process.md`, `docs/collab/rfp.md`) are the governing source of truth for this repo too until local copies are added.
 
@@ -12,15 +12,15 @@ This file is the local phone book, not the process. Skills should read `docs/col
 | Trunk branch | `main` |
 | Prototype branch | `v1.x-proto` |
 | Prototype strand active | yes |
-| RFP id prefix | `MUI1` |
+| RFP id prefix | `TEL1` |
 | RFP major | `1` |
-| Next freeze id pattern | `MUI1-FREEZE-<nnn>` |
+| Next freeze id pattern | `TEL1-FREEZE-<nnn>` |
 
 ## GitHub
 
 | Fact | Value |
 |---|---|
-| Owner / repo | `greatstrength/tiferet-mui` |
+| Owner / repo | `greatstrength/tiferet-elements` |
 | Project | Tiferet Framework - Feature Release (#2) |
 | Project node id | `PVT_kwDOCKXjws4A7Y85` |
 

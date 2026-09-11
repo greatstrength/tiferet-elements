@@ -1,33 +1,28 @@
-# tiferet-mui
+# tiferet-elements
 
-Tiferet MUI lets a Streamlit application describe and render Material UI
-widgets through Streamlit's supported public component API. It keeps widget
-trees and callback routing host-agnostic, while the optional Streamlit binding
-handles mounting and interaction delivery.
+Tiferet Elements lets a Streamlit application describe and render Material UI, Nivo, and Monaco widgets through Streamlit's supported public component API. It keeps widget trees and callback routing host-agnostic, while the optional Streamlit binding handles mounting and interaction delivery.
 
 ## Install
 
-Install the core package when you only need its domain models, widget defaults,
-and domain events:
+Install the core package when you only need its domain models, widget defaults, and domain events:
 
 ```bash
-pip install tiferet-mui
+pip install tiferet-elements
 ```
 
 Install the Streamlit extra to render a `Frame` in a Streamlit application:
 
 ```bash
-pip install "tiferet-mui[streamlit]"
+pip install "tiferet-elements[streamlit]"
 ```
 
 ## Minimal usage
 
-Build a nested Frame from widget specifications, then mount it with the
-Streamlit binding:
+Build a nested Frame from widget specifications, then mount it with the Streamlit binding:
 
 ```python
-from tiferet_mui.blueprints.core import build_frame
-from tiferet_mui.blueprints.streamlit import build_streamlit_binding
+from tiferet_elements.blueprints.core import build_frame
+from tiferet_elements.blueprints.streamlit import build_streamlit_binding
 
 
 def save() -> None:
