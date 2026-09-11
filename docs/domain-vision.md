@@ -1,6 +1,6 @@
-# Domain Vision Statement — Tiferet MUI
+# Domain Vision Statement — Tiferet Elements
 
-**Status:** Draft · **Domain:** `tiferet-mui` · **Code:** `tiferet_mui/` · **Branch:** `docs-core-domain-and-binding`
+**Status:** Draft · **Domain:** `tiferet-elements` · **Code:** `tiferet_elements/` · **Branch:** `main`
 
 ## The bet: build on the supported door, not the one propped open
 
@@ -10,11 +10,11 @@ For several years that somewhere else has been a community library, `okld/stream
 
 What that costs is not theoretical. Teams either freeze their Streamlit version and forgo two years of fixes, or they ship a script that edits the installed library's own source files during every build — a workaround the community wrote itself, then had to rewrite when the next Streamlit release broke it again, and which still does not work for everyone who tries it. Either way, a core piece of the product's interface rests on something nobody maintains.
 
-The same Streamlit release that broke the old approach also shipped a public, supported way for a component to report interactions back to the application. **Tiferet MUI is a bet that the right response is to build on that supported path and maintain it, rather than keep patching around a closed door.**
+The same Streamlit release that broke the old approach also shipped a public, supported way for a component to report interactions back to the application. **Tiferet Elements is a bet that the right response is to build on that supported path and maintain it, rather than keep patching around a closed door.**
 
 ## What this domain makes real
 
-Tiferet MUI is a small library that lets any Streamlit application present Material UI controls, Nivo charts, and the Monaco code editor, and respond when a user clicks, types, or selects something — using only the interaction path Streamlit publicly supports. Nothing is patched; nothing reaches into another project's internals. The browser-side visuals from the existing ecosystem were never the broken part. The wiring behind them was, and that is what this package owns.
+Tiferet Elements is a small library that lets any Streamlit application present Material UI controls, Nivo charts, and the Monaco code editor, and respond when a user clicks, types, or selects something — using only the interaction path Streamlit publicly supports. Nothing is patched; nothing reaches into another project's internals. The browser-side visuals from the existing ecosystem were never the broken part. The wiring behind them was, and that is what this package owns.
 
 ## What we get for it
 

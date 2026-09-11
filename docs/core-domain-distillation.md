@@ -1,13 +1,13 @@
-# Core Domain Distillation — Tiferet MUI
+# Core Domain Distillation — Tiferet Elements
 
-**Status:** Draft · **Domain:** `tiferet-mui` · **Code:** `tiferet_mui/` · **Branch:** `docs-core-domain-and-binding`
+**Status:** Draft · **Domain:** `tiferet-elements` · **Code:** `tiferet_elements/` · **Branch:** `main`
 **Companion:** `docs/domain-vision.md`
 
 ## 1. Purpose of this document
 
-The vision statement says *what* Tiferet MUI is for and why it is worth building. This document says *how the domain will actually work*: the vocabulary, the behaviors, the rules those behaviors enforce, and the relationships between the parts. It is the reference a contributor should read before drafting or implementing a change to this package, and the reference a reviewer should read before judging whether a change belongs. It represents the ideal model description for this version of the domain; specification documents that propose changes should cite this document, not the other way around.
+The vision statement says *what* Tiferet Elements is for and why it is worth building. This document says *how the domain will actually work*: the vocabulary, the behaviors, the rules those behaviors enforce, and the relationships between the parts. It is the reference a contributor should read before drafting or implementing a change to this package, and the reference a reviewer should read before judging whether a change belongs. It represents the ideal model description for this version of the domain; specification documents that propose changes should cite this document, not the other way around.
 
-**This is a forward-looking distillation.** As of this writing the repository contains no package code — `git log` shows only the initial commit (`LICENSE`, `README.md`) plus this branch's two documentation additions. There is no `tiferet_mui/` directory, no `pyproject.toml`, and none of the modules named below exist yet. Every module path in this document is a **planned** location, not a verified citation, and is marked as such. Nothing here should be read as an assertion that code currently behaves a given way.
+**This is a forward-looking distillation.** As of this writing the repository contains no package code — `git log` shows only the initial commit (`LICENSE`, `README.md`) plus this branch's two documentation additions. There is no `tiferet_elements/` directory, no `pyproject.toml`, and none of the modules named below exist yet. Every module path in this document is a **planned** location, not a verified citation, and is marked as such. Nothing here should be read as an assertion that code currently behaves a given way.
 
 Because there is no implementation to read, every claim below is grounded in one of two kinds of source instead of code:
 
@@ -20,7 +20,7 @@ Once this domain's implementation lands, this document should be revised to repl
 
 ## 2. The core domain, restated precisely
 
-Tiferet MUI's core domain is **mediating one render pass of a widget tree and the interactions reported back from it, without depending on a private Streamlit interface.**
+Tiferet Elements's core domain is **mediating one render pass of a widget tree and the interactions reported back from it, without depending on a private Streamlit interface.**
 
 A caller composes a tree of widget descriptions once per render. Before that tree is shown, the domain builds a registry mapping every interactive part of it to the handler that should run when it fires. When the host application later reports that something happened, the domain looks up the one handler that claimed that identifier and runs it. Nothing is inferred from a private callback-wiring mechanism inside the host; every handoff happens through data the domain itself declared.
 
@@ -42,7 +42,7 @@ Everything else — describing a tree of widgets, assigning identifiers to its i
 
 **Callback Table** — the `callback_id → handler` mapping rebuilt from a `Frame`'s interactive elements on every render pass. It is the registry that makes "register who is listening" a real, inspectable artifact rather than an implicit side effect of composing the screen.
 
-**Binding** — the dialect-specific handler that a host's blueprint module (a `blueprints/<dialect>.py`, e.g. `blueprints/streamlit.py`) builds: a plain callable that mounts a `Frame` in that host and dispatches whatever interactions it reports. A consumer's own session or view context wires this callable in as one of its runtime-handler slots. Tiferet MUI itself never owns that session — the `Binding` is the entire surface it hands back.
+**Binding** — the dialect-specific handler that a host's blueprint module (a `blueprints/<dialect>.py`, e.g. `blueprints/streamlit.py`) builds: a plain callable that mounts a `Frame` in that host and dispatches whatever interactions it reports. A consumer's own session or view context wires this callable in as one of its runtime-handler slots. Tiferet Elements itself never owns that session — the `Binding` is the entire surface it hands back.
 
 Every other term used later in this document (`StateService`, `CallbackTableAggregate`, `FrameTransferObject`, `DomainEvent`) is a Tiferet framework term used in its ordinary framework sense, not a domain-specific coinage, so it is not repeated in this glossary.
 
@@ -57,32 +57,32 @@ Every other term used later in this document (`StateService`, `CallbackTableAggr
 
 ## 5. The behaviors
 
-Three bounded steps carry the domain end to end. The first two are planned as `DomainEvent` subclasses in `tiferet_mui/events/` (paths below are planned, not yet-existing files); the third is the dialect-specific edge that invokes them. No `feature.yml`-declared pipeline is planned for this package — see Section 6 for why.
+Three bounded steps carry the domain end to end. The first two are planned as `DomainEvent` subclasses in `tiferet_elements/events/` (paths below are planned, not yet-existing files); the third is the dialect-specific edge that invokes them. No `feature.yml`-declared pipeline is planned for this package — see Section 6 for why.
 
 ### 5.1 Build the Callback Table
 *Walk a composed `Frame`'s `Element` tree, assign a `callback_id` to each interactive element, and freeze the result into an immutable `CallbackTable`.*
 
-Planned as `BuildCallbackTable`, a `DomainEvent` subclass living at `tiferet_mui/events/` (module not yet named beyond "events layer" in the architecture plan). It is expected to build a mutable `CallbackTableAggregate` (`tiferet_mui/mappers/`) while walking the tree, then freeze it into the read-only `CallbackTable` domain object (`tiferet_mui/domain/`) that later steps consume. Being a `DomainEvent` subclass gives it `verify`/`raise_error`/`parameters_required` and the `DomainEvent.handle()` test harness for free, per framework convention.
+Planned as `BuildCallbackTable`, a `DomainEvent` subclass living at `tiferet_elements/events/` (module not yet named beyond "events layer" in the architecture plan). It is expected to build a mutable `CallbackTableAggregate` (`tiferet_elements/mappers/`) while walking the tree, then freeze it into the read-only `CallbackTable` domain object (`tiferet_elements/domain/`) that later steps consume. Being a `DomainEvent` subclass gives it `verify`/`raise_error`/`parameters_required` and the `DomainEvent.handle()` test harness for free, per framework convention.
 
 **Verdict: agnostic.** Nothing about walking an `Element` tree and assigning identifiers depends on which host will eventually mount the result. This step is the concrete instance of the "id declared as data, resolved via lookup, executed by one generic executor" idiom the architecture plan calls out by name.
 
 ### 5.2 Dispatch a reported callback
 *Resolve a `callback_id` out of an incoming composite interaction payload and invoke the one handler registered against it.*
 
-Planned as `DispatchCallback`, also a `DomainEvent` subclass in `tiferet_mui/events/`. Its job is strictly a lookup-and-invoke: given the current `CallbackTable` and a reported payload, find the `callback_id` inside that payload, and call the handler the `CallbackTable` has for it — raising a domain error rather than failing silently if the id is unrecognized (echoing the vision statement's "an interaction that arrives with no one listening is a reported error, not a shrug").
+Planned as `DispatchCallback`, also a `DomainEvent` subclass in `tiferet_elements/events/`. Its job is strictly a lookup-and-invoke: given the current `CallbackTable` and a reported payload, find the `callback_id` inside that payload, and call the handler the `CallbackTable` has for it — raising a domain error rather than failing silently if the id is unrecognized (echoing the vision statement's "an interaction that arrives with no one listening is a reported error, not a shrug").
 
 **Verdict: agnostic**, with one caveat carried over from Section 4: the *shape* of the incoming payload this event parses is provisional until a rendering-strategy spike confirms it. The lookup-and-invoke mechanism itself does not depend on the host; the field names inside the payload it reads might, until confirmed otherwise.
 
 ### 5.3 Mount the Frame and receive its reports (the Streamlit Binding)
 *Declare the vendored component instance with the host's public `on_change` mechanism, and close over `BuildCallbackTable`/`DispatchCallback` to produce one plain callable.*
 
-Planned to live in `tiferet_mui/blueprints/streamlit.py`, the dialect entrypoint and (along with `tiferet_mui/utils/streamlit.py`) one of only two modules in the whole package permitted to import `streamlit`, per the Subdomain isolation rule. It is expected to call `declare_component(...)(...)` with the `on_change` keyword introduced by `streamlit/streamlit#8633`, invoke `BuildCallbackTable` and `DispatchCallback` directly (no context object needed, since this package owns no session), and return a plain callable — the `Binding`. That callable is what a host's own session context (e.g. a `tiferet-streamlit` `ViewContext`) wires in as a runtime-handler slot.
+Planned to live in `tiferet_elements/blueprints/streamlit.py`, the dialect entrypoint and (along with `tiferet_elements/utils/streamlit.py`) one of only two modules in the whole package permitted to import `streamlit`, per the Subdomain isolation rule. It is expected to call `declare_component(...)(...)` with the `on_change` keyword introduced by `streamlit/streamlit#8633`, invoke `BuildCallbackTable` and `DispatchCallback` directly (no context object needed, since this package owns no session), and return a plain callable — the `Binding`. That callable is what a host's own session context (e.g. a `tiferet-streamlit` `ViewContext`) wires in as a runtime-handler slot.
 
 **Verdict: variable.** This is the one behavior whose entire reason for existing is a specific host's API. A second host would need its own sibling module implementing this same behavior against that host's own interaction mechanism; nothing here generalizes.
 
 ## 6. How the behaviors compose
 
-Unlike domains that declare their pipeline in a `feature.yml` read by `FeatureContext`, this package has no `repos/` layer and therefore no YAML-declared pipeline — the architecture plan is explicit that DI configuration here is small enough to be declared as in-code `ServiceConfiguration` objects, and there are no other consumer-facing sequencing points that would justify config-driven orchestration. Composition instead happens as a direct call sequence, assembled by `tiferet_mui/blueprints/core.py` (dialect-agnostic: resolves the DI-backed `StateService` and returns a handler-building function) and closed over by the dialect entrypoint in `blueprints/streamlit.py`.
+Unlike domains that declare their pipeline in a `feature.yml` read by `FeatureContext`, this package has no `repos/` layer and therefore no YAML-declared pipeline — the architecture plan is explicit that DI configuration here is small enough to be declared as in-code `ServiceConfiguration` objects, and there are no other consumer-facing sequencing points that would justify config-driven orchestration. Composition instead happens as a direct call sequence, assembled by `tiferet_elements/blueprints/core.py` (dialect-agnostic: resolves the DI-backed `StateService` and returns a handler-building function) and closed over by the dialect entrypoint in `blueprints/streamlit.py`.
 
 The sequence, once implemented, is expected to be:
 
@@ -102,13 +102,13 @@ flowchart LR
 
 ## 7. Relationships / cross-boundary rules
 
-**Tiferet MUI supplies a handler; it does not own a session.** The architecture plan states this as the governing reason the package has no `contexts/` layer at all: `tiferet-streamlit` (or any other consumer) already owns its own session/view context, and a competing session hub inside `tiferet-mui` would leave two hubs fighting over the same running app. Instead, the package uses the same **runtime-handler-slot** shape the framework already relies on elsewhere — a handler is built and handed back for a host's own session context to wire in, the same relationship core `tiferet` uses to add CLI argument parsing to `AppSessionContext` without CLI needing its own session class, per the architecture plan.
+**Tiferet Elements supplies a handler; it does not own a session.** The architecture plan states this as the governing reason the package has no `contexts/` layer at all: `tiferet-streamlit` (or any other consumer) already owns its own session/view context, and a competing session hub inside `tiferet-elements` would leave two hubs fighting over the same running app. Instead, the package uses the same **runtime-handler-slot** shape the framework already relies on elsewhere — a handler is built and handed back for a host's own session context to wire in, the same relationship core `tiferet` uses to add CLI argument parsing to `AppSessionContext` without CLI needing its own session class, per the architecture plan.
 
 **`di/` exists; `repos/` does not.** Resolving a dialect-specific `StateService` (Streamlit today, potentially another host later) is exactly the flagged-dependency problem `tiferet`'s `DIContext`/`ServiceConfiguration`/`FlaggedDependency` already solves. No YAML-declared configuration is planned, so the `repos/` layer that would otherwise read it is excluded outright.
 
 **No `BindingService` interface.** `interfaces/` is planned to declare only `StateService` (an ABC with `get`/`set`). The architecture plan deliberately does *not* introduce a `BindingService` contract: mounting a component is irreducibly dialect-specific and will only ever have one implementation per host, so it is not a DI-swapped contract — it lives as plain functions in the dialect's own blueprint module, consistent with the framework convention that blueprints are module-level functions rather than injected services.
 
-**Dependency direction on other Tiferet-family packages.** Tiferet MUI depends on `tiferet` and (optionally) `streamlit` only. It never imports or depends on `tiferet-streamlit`, and it defines no vocabulary of features, views, or pages — that vocabulary belongs entirely to `tiferet-streamlit`, and judging whether a proposed addition to this package belongs here requires checking it against that boundary specifically (Section 9 names it again as an explicit exclusion).
+**Dependency direction on other Tiferet-family packages.** Tiferet Elements depends on `tiferet` and (optionally) `streamlit` only. It never imports or depends on `tiferet-streamlit`, and it defines no vocabulary of features, views, or pages — that vocabulary belongs entirely to `tiferet-streamlit`, and judging whether a proposed addition to this package belongs here requires checking it against that boundary specifically (Section 9 names it again as an explicit exclusion).
 
 **Judging any of the above requires the plan itself as input**, in the same sense a compiler's relationship rules require knowing a file's declared component type before a given import can be judged valid or invalid: none of these constraints are enforced by any tooling yet (there is no code to enforce them against), so until this domain is implemented, this document and the architecture plan it is grounded in are the only recorded source of truth for which relationships are permitted.
 
@@ -138,7 +138,7 @@ Stated plainly, per the split the architecture plan already commits to, so futur
 **Inside the domain:** describing a screen as a `Frame` of `Element`s; building and freezing a `CallbackTable` for one render pass; dispatching a reported interaction to exactly the handler registered for it; and — for exactly one host today — mounting that `Frame` and receiving its reports through a supported public mechanism.
 
 **Outside the domain, with an explicit owner for each:**
-- **Application session and lifecycle ownership** — the host application's own session or view context (e.g. `tiferet-streamlit`'s `ViewContext`). Tiferet MUI hands back a plain callable; it never runs the show itself.
+- **Application session and lifecycle ownership** — the host application's own session or view context (e.g. `tiferet-streamlit`'s `ViewContext`). Tiferet Elements hands back a plain callable; it never runs the show itself.
 - **Features, views, and pages** — entirely `tiferet-streamlit`'s vocabulary. This domain has no concept of any of them and never will, per the vision statement's stated non-goals.
 - **Being a fork, patch, or rescue of `okld/streamlit-elements`** — this domain reuses that project's compiled frontend bundle as a vendored asset (Section 8, `assets/streamlit/`), but owns none of its Python-side callback logic and does not track or fix that upstream project.
 - **General-purpose Streamlit component authoring** — this domain solves one specific wiring problem for one specific set of widget libraries (Material UI, Nivo, Monaco); it is not a framework for building arbitrary Streamlit components.
