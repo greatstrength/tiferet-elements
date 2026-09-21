@@ -6,8 +6,8 @@
 import streamlit as st
 
 # ** app
-from tiferet_mui.blueprints.core import build_frame
-from tiferet_mui.blueprints.streamlit import build_streamlit_binding
+from tiferet_elements.blueprints.core import build_frame
+from tiferet_elements.blueprints.streamlit import build_streamlit_binding
 
 # *** constants
 
@@ -69,7 +69,7 @@ GALLERY_WIDGETS = [
 # ** function: render_gallery
 def render_gallery() -> None:
     '''
-    Render one catalogued instance of each Tiferet MUI widget type.
+    Render one catalogued instance of each Tiferet Elements widget type.
 
     :return: None
     :rtype: None
@@ -77,10 +77,10 @@ def render_gallery() -> None:
 
     # Configure the standalone gallery page before writing its content.
     st.set_page_config(
-        page_title='Tiferet MUI Component Gallery',
+        page_title='Tiferet Elements Component Gallery',
         page_icon='🎨',
     )
-    st.title('Tiferet MUI Component Gallery')
+    st.title('Tiferet Elements Component Gallery')
 
     # Build the single host-specific edge used to mount every composed Frame.
     binding = build_streamlit_binding()
@@ -90,7 +90,7 @@ def render_gallery() -> None:
         st.caption(widget_type)
         binding(
             build_frame(elements=[widget_spec]),
-            key=f'tiferet_mui_gallery_{widget_type}',
+            key=f'tiferet_elements_gallery_{widget_type}',
         )
 
 # Render the standalone component gallery.

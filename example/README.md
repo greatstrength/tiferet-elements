@@ -1,12 +1,12 @@
-# Tiferet MUI Component Gallery
+# Tiferet Elements Component Gallery
 
 A runnable Streamlit gallery that renders every widget currently available in
-the Tiferet MUI catalog.
+the Tiferet Elements catalog.
 
 ## Prerequisites
 
 - Python 3.10+
-- `tiferet-mui` installed with its Streamlit extra
+- `tiferet-elements` installed with its Streamlit extra
 
 ## Setup
 
@@ -42,9 +42,9 @@ The page captions and renders one instance of each widget type:
 
 - `app.py` builds each widget specification through `build_frame` and mounts it
   through `build_streamlit_binding`.
-- `../tiferet_mui/assets/core.py` contains the host-agnostic default data for
+- `../tiferet_elements/assets/core.py` contains the host-agnostic default data for
   every catalogued widget type.
-- `../tiferet_mui/events/core.py` materializes the specifications into
+- `../tiferet_elements/events/core.py` materializes the specifications into
   immutable Elements and Frames.
-- `../tiferet_mui/blueprints/streamlit.py` adapts a Frame to the vendored
+- `../tiferet_elements/blueprints/streamlit.py` adapts a Frame to the vendored
   Streamlit component.

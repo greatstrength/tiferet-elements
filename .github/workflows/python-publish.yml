@@ -39,7 +39,7 @@ jobs:
       - name: Extract version
         id: version
         run: |
-          VERSION=$(python -c "import tiferet_mui; print(tiferet_mui.__version__)")
+          VERSION=$(python -c "import tiferet_elements; print(tiferet_elements.__version__)")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Validate tag matches version
         if: startsWith(github.ref, 'refs/tags/')

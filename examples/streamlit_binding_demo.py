@@ -6,8 +6,8 @@
 import streamlit as st
 
 # ** app
-from tiferet_mui.blueprints.core import build_frame
-from tiferet_mui.blueprints.streamlit import build_streamlit_binding
+from tiferet_elements.blueprints.core import build_frame
+from tiferet_elements.blueprints.streamlit import build_streamlit_binding
 
 # *** functions
 
@@ -82,7 +82,7 @@ def render_demo() -> None:
 
     # Build the plain binding and mount this frame with a stable widget key.
     binding = build_streamlit_binding()
-    binding(frame, key='tiferet_mui_demo')
+    binding(frame, key='tiferet_elements_demo')
 
     # Display the last callback outcome owned by the host application session.
     st.write(st.session_state.get('mui_demo_result', 'Awaiting interaction.'))

@@ -1,1 +1,0 @@
-"""Tiferet MUI Mapper Tests"""

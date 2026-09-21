@@ -1,5 +1,5 @@
 [project]
-name = "tiferet-mui"
+name = "tiferet-elements"
 dynamic = ["version"]
 description = "Tiferet-styled Material UI, Nivo, and Monaco bindings for Streamlit apps, using Streamlit's public component API."
 authors = [
@@ -13,9 +13,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/greatstrength/tiferet-mui"
-Repository = "https://github.com/greatstrength/tiferet-mui"
-Download = "https://github.com/greatstrength/tiferet-mui"
+Homepage = "https://github.com/greatstrength/tiferet-elements"
+Repository = "https://github.com/greatstrength/tiferet-elements"
+Download = "https://github.com/greatstrength/tiferet-elements"
 
 [project.optional-dependencies]
 streamlit = [
@@ -32,12 +32,12 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["tiferet_mui*"]
+include = ["tiferet_elements*"]
 
 [tool.setuptools.package-data]
-tiferet_mui = [
+tiferet_elements = [
     "assets/streamlit/**/*",
 ]
 
 [tool.setuptools.dynamic]
-version = { attr = "tiferet_mui.__version__" }
+version = { attr = "tiferet_elements.__version__" }

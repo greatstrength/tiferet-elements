@@ -1,1 +1,0 @@
-"""Tiferet MUI utility tests."""
