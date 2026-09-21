@@ -12,6 +12,11 @@ import streamlit as st
 # ** app
 from ..interfaces import StateService
 
+# *** constants
+
+# ** constant: material_icons_stylesheet_href
+MATERIAL_ICONS_STYLESHEET_HREF = './material-icons/material-icons.css'
+
 # *** functions
 
 # ** function: get_streamlit_bundle_path
@@ -28,6 +33,53 @@ def get_streamlit_bundle_path() -> str:
 
     # Resolve the package-relative frontend bundle for Streamlit's path API.
     return str(Path(__file__).parents[1] / 'assets' / 'streamlit')
+
+# ** function: get_material_icons_font_path
+def get_material_icons_font_path() -> str:
+    '''
+    Return the absolute filesystem path of the vendored Material Icons font.
+
+    :return: The vendored Material Icons woff2 path.
+    :rtype: str
+    '''
+
+    # Resolve the font beside the Streamlit component bundle.
+    return str(
+        Path(get_streamlit_bundle_path())
+        / 'material-icons'
+        / 'MaterialIcons-Regular.woff2'
+    )
+
+# ** function: wrap_js_with_material_icons_font
+def wrap_js_with_material_icons_font(js: str) -> str:
+    '''
+    Wrap a render payload so the component iframe loads Material Icons.
+
+    The vendored bundle evaluates the ``js`` argument as
+    ``return (<js>);``. This wrapper stays a single expression that
+    injects the local stylesheet once, then returns the original render
+    array. Runtime injection is used instead of patching ``index.html``
+    so regenerating the Next.js export does not drop the font.
+
+    :param js: The serialized render-expression payload.
+    :type js: str
+    :return: The font-injecting JavaScript expression.
+    :rtype: str
+    '''
+
+    # Inject the bundled stylesheet before returning the original renders.
+    return (
+        '(function(){'
+        'if(!document.getElementById("tiferet-material-icons")){'
+        'var link=document.createElement("link");'
+        'link.id="tiferet-material-icons";'
+        'link.rel="stylesheet";'
+        f'link.href={MATERIAL_ICONS_STYLESHEET_HREF!r};'
+        'document.head.appendChild(link);'
+        '}'
+        f'return {js};'
+        '})()'
+    )
 
 # *** utils
 

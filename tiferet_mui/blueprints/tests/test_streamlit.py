@@ -63,4 +63,41 @@ def test_binding_mounts_component_and_dispatches_host_report(monkeypatch):
     assert declaration['path'].endswith('tiferet_mui/assets/streamlit')
     assert component_call['key'] == 'mui_demo'
     assert 'render("muiElements","Button"' in component_call['js']
+    assert 'tiferet-material-icons' in component_call['js']
+    assert './material-icons/material-icons.css' in component_call['js']
     assert handled == ['button clicked']
+
+# ** test: test_binding_serializes_icon_ligature_name
+def test_binding_serializes_icon_ligature_name(monkeypatch):
+    '''Test an Icon frame serializes the ligature name and injects the font.'''
+
+    # Capture the component payload without a Streamlit runtime.
+    component_call = {}
+
+    def component(**kwargs):
+        '''Record component arguments.'''
+
+        component_call.update(kwargs)
+        return None
+
+    monkeypatch.setattr(
+        'tiferet_mui.blueprints.streamlit.declare_component',
+        lambda name, path: component,
+    )
+    frame = Frame(
+        elements=[
+            Element(
+                type='Icon',
+                props={'children': 'home'},
+            ),
+        ],
+    )
+
+    # Mount the Icon frame through the public binding.
+    binding = build_streamlit_binding(handler_builder=lambda key, dispatch: lambda: None)
+    binding(frame, key='mui_icon')
+
+    # Verify the ligature stays a children prop and the font stylesheet is injected.
+    assert 'render("muiElements","Icon"' in component_call['js']
+    assert '"children":"home"' in component_call['js']
+    assert 'tiferet-material-icons' in component_call['js']
