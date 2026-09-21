@@ -147,6 +147,7 @@ def test_gallery_renders_every_displayed_widget():
             ('button', 'BUTTON SAMPLE'),
             ('text_field', 'TEXT FIELD SAMPLE'),
             ('box', 'BOX SAMPLE'),
+            ('icon', 'home'),
             ('card', 'CARD SAMPLE'),
             ('form_label', 'FORM LABEL SAMPLE'),
             ('typography', 'TYPOGRAPHY SAMPLE'),
@@ -157,10 +158,25 @@ def test_gallery_renders_every_displayed_widget():
             page.goto(url)
             for index, (widget_type, sample) in enumerate(samples):
                 page.get_by_text(widget_type, exact=True).wait_for()
-                page.frame_locator('iframe').nth(index).get_by_text(
+                widget_frame = page.frame_locator('iframe').nth(index)
+                widget_frame.get_by_text(
                     sample,
                     exact=True,
                 ).first.wait_for()
+                if widget_type != 'icon':
+                    continue
+
+                # Confirm the ligature uses the vendored Material Icons face.
+                icon = widget_frame.locator('.material-icons').first
+                font_family = icon.evaluate(
+                    'el => getComputedStyle(el).fontFamily',
+                )
+                font_loaded = icon.evaluate(
+                    '''() => document.fonts.load('24px "Material Icons"')'''
+                    '''.then(() => document.fonts.check('24px "Material Icons"'))''',
+                )
+                assert 'Material Icons' in font_family
+                assert font_loaded is True
             browser.close()
     finally:
         # Stop the temporary Streamlit process even when browser assertions fail.

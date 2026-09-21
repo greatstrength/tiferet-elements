@@ -11,7 +11,10 @@ from streamlit.components.v1 import declare_component
 
 # ** app
 from ..events import BuildCallbackTable, DispatchCallback
-from ..utils.streamlit import get_streamlit_bundle_path
+from ..utils.streamlit import (
+    get_streamlit_bundle_path,
+    wrap_js_with_material_icons_font,
+)
 from .core import build_handler_builder
 
 # *** functions
@@ -127,12 +130,14 @@ def build_streamlit_binding(
         # Build the public zero-argument on-change callback for this component.
         on_change = handler_builder(key, dispatch)
 
-        # Serialize and mount the component through the vendored render protocol.
+        # Serialize the frame, then inject Material Icons inside the iframe.
         return component(
-            js='[' + ','.join(
-                _serialize_element(element)
-                for element in frame.elements
-            ) + ']',
+            js=wrap_js_with_material_icons_font(
+                '[' + ','.join(
+                    _serialize_element(element)
+                    for element in frame.elements
+                ) + ']',
+            ),
             key=key,
             on_change=on_change,
         )
