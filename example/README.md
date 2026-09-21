@@ -32,16 +32,11 @@ The page captions and renders one instance of each widget type:
 - `button` — Material UI `Button`
 - `text_field` — Material UI `TextField`
 - `box` — Material UI `Box`
+- `icon` — Material UI `Icon`, rendered from the vendored Material Icons font
 - `card` — Material UI `Card`
 - `form_label` — Material UI `FormLabel`, the catalog's real MUI
   label-equivalent
 - `typography` — Material UI `Typography`
-
-## Deferred Icon Rendering
-
-The catalog includes an `icon` widget type, but this gallery intentionally
-excludes it. Proper offline Material Icons rendering through a bundled font or
-SVG icon registry is deferred to a future v1.1 release.
 
 ## Architecture
 
