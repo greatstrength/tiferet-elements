@@ -12,7 +12,7 @@ callbacks.
 - **Prototype branch:** `v1.x-proto`
 - **Python:** >= 3.10
 - **Version:** `1.0.0b2`
-- **Dependencies:** `tiferet >= 2.0.3`; optional `streamlit >= 1.36.0`
+- **Dependencies:** `tiferet >= 2.1.0`; optional `streamlit >= 1.36.0`
 
 ## Package Layout
 
