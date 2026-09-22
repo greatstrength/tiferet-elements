@@ -34,7 +34,6 @@ def get_streamlit_bundle_path() -> str:
     # Resolve the vendored frontend bundle beside the package assets.
     return str(Path(__file__).parents[1] / 'assets' / 'streamlit')
 
-
 # ** function: get_material_icons_font_path
 def get_material_icons_font_path() -> str:
     '''
@@ -50,7 +49,6 @@ def get_material_icons_font_path() -> str:
         / 'material-icons'
         / 'MaterialIcons-Regular.woff2'
     )
-
 
 # ** function: wrap_js_with_material_icons_font
 def wrap_js_with_material_icons_font(js: str) -> str:
@@ -76,7 +74,6 @@ def wrap_js_with_material_icons_font(js: str) -> str:
         f'link.href={MATERIAL_ICONS_STYLESHEET_HREF!r};'
         f'document.head.appendChild(link);}}return {js};}})()'
     )
-
 
 # *** utils
 

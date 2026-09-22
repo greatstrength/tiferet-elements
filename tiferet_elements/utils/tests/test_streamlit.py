@@ -40,7 +40,6 @@ def test_streamlit_state_proxies_session_state(monkeypatch):
     assert state_service.get('component') == {'callback_00': {}}
     assert session_state['component'] == {'callback_00': {}}
 
-
 # ** test: bundle_path_resolves_vendored_component
 def test_bundle_path_resolves_vendored_component():
     '''
@@ -53,7 +52,6 @@ def test_bundle_path_resolves_vendored_component():
     # Verify the expected package-relative location and entrypoint exist.
     assert bundle_path.endswith('tiferet_elements/assets/streamlit')
     assert (Path(bundle_path) / 'index.html').is_file()
-
 
 # ** test: material_icons_font_is_vendored
 def test_material_icons_font_is_vendored():
@@ -75,7 +73,6 @@ def test_material_icons_font_is_vendored():
     assert stylesheet_path.is_file()
     assert "font-family: 'Material Icons'" in stylesheet_path.read_text()
     assert ICON_ELEMENT_DEFAULTS == {'type': 'Icon', 'props': {}}
-
 
 # ** test: wrap_js_injects_material_icons_stylesheet
 def test_wrap_js_injects_material_icons_stylesheet():
