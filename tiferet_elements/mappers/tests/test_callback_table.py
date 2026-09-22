@@ -3,7 +3,7 @@
 # *** imports
 
 # ** app
-from tiferet.testing import AggregateTestBase
+from tiferet import use_tester
 from tiferet_elements.domain import CallbackTable
 from tiferet_elements.mappers import CallbackTableAggregate
 
@@ -51,25 +51,15 @@ EQUALITY_FIELDS = [
     'handlers',
 ]
 
-# *** tests
+# *** testers
 
-# ** test: TestCallbackTableAggregate
-class TestCallbackTableAggregate(AggregateTestBase):
-    '''
-    Tests the mutable callback-registration aggregate through the mapper harness.
-    '''
-
-    # * attribute: aggregate_cls
-    aggregate_cls = CallbackTableAggregate
-
-    # * attribute: sample_data
-    sample_data = CALLBACK_TABLE_SAMPLE_DATA
-
-    # * attribute: equality_fields
-    equality_fields = EQUALITY_FIELDS
-
-    # * attribute: set_attribute_params
-    set_attribute_params = [
+# ** tester: test_callback_table_aggregate
+@use_tester(
+    type='aggregate',
+    target_cls=CallbackTableAggregate,
+    sample_data=CALLBACK_TABLE_SAMPLE_DATA,
+    equality_fields=EQUALITY_FIELDS,
+    set_attribute_params=[
         (
             'handlers',
             {'text_01': secondary_handler},
@@ -80,16 +70,48 @@ class TestCallbackTableAggregate(AggregateTestBase):
             'value',
             'INVALID_MODEL_ATTRIBUTE',
         ),
-    ]
+    ],
+)
+class TestCallbackTableAggregate:
+    '''
+    Tests the mutable callback-registration aggregate through the aggregate tester.
+    '''
 
-    # * method: test_register
-    def test_register(self, aggregate):
+    # * test: new
+    def test_new(self, test_ctx) -> None:
+        '''
+        Test aggregate instantiation matches sample data.
+
+        :param test_ctx: The bound aggregate tester context.
+        :type test_ctx: AggregateTesterContext
+        '''
+
+        # Assert construction against sample data.
+        test_ctx.assert_new()
+
+    # * test: set_attribute
+    def test_set_attribute(self, test_ctx) -> None:
+        '''
+        Test set_attribute accepts valid fields and rejects unknown attributes.
+
+        :param test_ctx: The bound aggregate tester context.
+        :type test_ctx: AggregateTesterContext
+        '''
+
+        # Assert each configured set-attribute case.
+        test_ctx.assert_set_attribute()
+
+    # * test: register
+    def test_register(self, test_ctx) -> None:
         '''
         Test register creates a validated callback-table entry.
 
-        :param aggregate: The harness-created callback-table aggregate.
-        :type aggregate: CallbackTableAggregate
+        :param test_ctx: The bound aggregate tester context.
+        :type test_ctx: AggregateTesterContext
         '''
+
+        # Construct a working callback-table aggregate from sample data.
+        aggregate = test_ctx.make_target()
 
         # Register a second callback handler.
         aggregate.register('text_01', secondary_handler)
@@ -100,14 +122,17 @@ class TestCallbackTableAggregate(AggregateTestBase):
             'text_01': secondary_handler,
         }
 
-    # * method: test_freeze
-    def test_freeze(self, aggregate):
+    # * test: freeze
+    def test_freeze(self, test_ctx) -> None:
         '''
         Test freeze returns an independent callback-table domain snapshot.
 
-        :param aggregate: The harness-created callback-table aggregate.
-        :type aggregate: CallbackTableAggregate
+        :param test_ctx: The bound aggregate tester context.
+        :type test_ctx: AggregateTesterContext
         '''
+
+        # Construct a working callback-table aggregate from sample data.
+        aggregate = test_ctx.make_target()
 
         # Freeze the initial registration state.
         frozen = aggregate.freeze()
