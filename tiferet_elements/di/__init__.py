@@ -15,11 +15,10 @@ STATE_SERVICE_CONFIGURATION = ServiceRegistration(
 
 # *** functions
 
-# ** function: create_di_context
-def create_di_context() -> ElementsServiceResolver:
+# ** function: create_elements_service_resolver
+def create_elements_service_resolver() -> ElementsServiceResolver:
     '''
-    Create the default code-declared MUI dependency resolution context as an
-    ElementsServiceResolver.
+    Create the default code-declared MUI ElementsServiceResolver.
 
     :return: The default MUI service resolver.
     :rtype: ElementsServiceResolver
@@ -35,5 +34,5 @@ def create_di_context() -> ElementsServiceResolver:
 __all__ = [
     'ElementsServiceResolver',
     'STATE_SERVICE_CONFIGURATION',
-    'create_di_context',
+    'create_elements_service_resolver',
 ]
