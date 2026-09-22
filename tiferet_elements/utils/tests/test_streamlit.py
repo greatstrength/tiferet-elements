@@ -9,6 +9,7 @@ from pathlib import Path
 import streamlit as st
 
 # ** app
+from tiferet import use_tester
 from tiferet_elements.assets import ICON_ELEMENT_DEFAULTS
 from tiferet_elements.interfaces import StateService
 from tiferet_elements.utils.streamlit import (
@@ -38,47 +39,95 @@ def test_streamlit_state_proxies_session_state(monkeypatch):
     assert state_service.get('component') == {'callback_00': {}}
     assert session_state['component'] == {'callback_00': {}}
 
-# ** test: test_bundle_path_resolves_vendored_component
-def test_bundle_path_resolves_vendored_component():
-    '''Test the component path resolves to the packaged frontend entrypoint.'''
+# *** testers
 
-    # Resolve the filesystem path supplied to declare_component.
-    bundle_path = get_streamlit_bundle_path()
+# ** tester: test_get_streamlit_bundle_path
+@use_tester(
+    type='generic',
+    target_cls=get_streamlit_bundle_path,
+)
+class TestGetStreamlitBundlePath:
+    '''
+    Tests for get_streamlit_bundle_path.
+    '''
 
-    # Verify the vendored frontend entrypoint exists at that path.
-    assert bundle_path.endswith('tiferet_elements/assets/streamlit')
-    assert (Path(bundle_path) / 'index.html').is_file()
+    # * test: bundle_path_resolves_vendored_component
+    def test_bundle_path_resolves_vendored_component(self, session) -> None:
+        '''
+        Test the component path resolves to the packaged frontend entrypoint.
 
-# ** test: test_material_icons_font_is_vendored
-def test_material_icons_font_is_vendored():
-    '''Test the Material Icons font and stylesheet ship with the component.'''
+        :param session: A fresh test session.
+        :type session: object
+        '''
 
-    # Resolve the vendored font next to the Streamlit bundle.
-    font_path = Path(get_material_icons_font_path())
-    stylesheet_path = (
-        Path(get_streamlit_bundle_path()) / 'material-icons' / 'material-icons.css'
-    )
+        # Resolve the filesystem path supplied to declare_component.
+        bundle_path = session.run()
 
-    # Verify the woff2, stylesheet, and unchanged Icon catalog shape.
-    assert font_path.is_file()
-    assert font_path.read_bytes()[:4] == b'wOF2'
-    assert stylesheet_path.is_file()
-    assert "font-family: 'Material Icons'" in stylesheet_path.read_text()
-    assert ICON_ELEMENT_DEFAULTS == {
-        'type': 'Icon',
-        'props': {},
-    }
+        # Verify the vendored frontend entrypoint exists at that path.
+        assert bundle_path.endswith('tiferet_elements/assets/streamlit')
+        assert (Path(bundle_path) / 'index.html').is_file()
 
-# ** test: test_wrap_js_injects_material_icons_stylesheet
-def test_wrap_js_injects_material_icons_stylesheet():
-    '''Test the js wrapper injects the local stylesheet around render expressions.'''
+# ** tester: test_get_material_icons_font_path
+@use_tester(
+    type='generic',
+    target_cls=get_material_icons_font_path,
+)
+class TestGetMaterialIconsFontPath:
+    '''
+    Tests for get_material_icons_font_path.
+    '''
 
-    # Wrap a representative render payload the bundle will evaluate.
-    wrapped = wrap_js_with_material_icons_font('[render("muiElements","Icon")]')
+    # * test: material_icons_font_is_vendored
+    def test_material_icons_font_is_vendored(self, session) -> None:
+        '''
+        Test the Material Icons font and stylesheet ship with the component.
 
-    # Verify the original payload is returned after a one-time stylesheet inject.
-    assert wrapped.startswith('(function(){')
-    assert wrapped.endswith('})()')
-    assert 'tiferet-material-icons' in wrapped
-    assert MATERIAL_ICONS_STYLESHEET_HREF in wrapped
-    assert 'return [render("muiElements","Icon")];' in wrapped
+        :param session: A fresh test session.
+        :type session: object
+        '''
+
+        # Resolve the vendored font next to the Streamlit bundle.
+        font_path = Path(session.run())
+        stylesheet_path = (
+            Path(get_streamlit_bundle_path()) / 'material-icons' / 'material-icons.css'
+        )
+
+        # Verify the woff2, stylesheet, and unchanged Icon catalog shape.
+        assert font_path.is_file()
+        assert font_path.read_bytes()[:4] == b'wOF2'
+        assert stylesheet_path.is_file()
+        assert "font-family: 'Material Icons'" in stylesheet_path.read_text()
+        assert ICON_ELEMENT_DEFAULTS == {
+            'type': 'Icon',
+            'props': {},
+        }
+
+# ** tester: test_wrap_js_with_material_icons_font
+@use_tester(
+    type='generic',
+    target_cls=wrap_js_with_material_icons_font,
+)
+class TestWrapJsWithMaterialIconsFont:
+    '''
+    Tests for wrap_js_with_material_icons_font.
+    '''
+
+    # * test: wrap_js_injects_material_icons_stylesheet
+    def test_wrap_js_injects_material_icons_stylesheet(self, test_ctx) -> None:
+        '''
+        Test the js wrapper injects the local stylesheet around render expressions.
+
+        :param test_ctx: The bound generic tester context.
+        :type test_ctx: object
+        '''
+
+        # Wrap a representative render payload the bundle will evaluate.
+        wrap = test_ctx.make_target()
+        wrapped = wrap('[render("muiElements","Icon")]')
+
+        # Verify the original payload is returned after a one-time stylesheet inject.
+        assert wrapped.startswith('(function(){')
+        assert wrapped.endswith('})()')
+        assert 'tiferet-material-icons' in wrapped
+        assert MATERIAL_ICONS_STYLESHEET_HREF in wrapped
+        assert 'return [render("muiElements","Icon")];' in wrapped
