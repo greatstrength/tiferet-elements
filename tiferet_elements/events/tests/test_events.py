@@ -6,8 +6,8 @@
 import pytest
 
 # ** app
+from tiferet import use_tester
 from tiferet.assets import TiferetError
-from tiferet.testing import DomainEventTestBase
 
 from tiferet_elements.assets import (
     CALLBACK_NOT_FOUND_ID,
@@ -78,22 +78,13 @@ CALLBACK_TABLE = CallbackTable(
     handlers={'button_00': button_handler},
 )
 
-# *** tests
+# *** testers
 
-# ** test: TestCreateFrame
-class TestCreateFrame(DomainEventTestBase):
-    '''
-    Tests recursive Frame construction through the DomainEvent test harness.
-    '''
-
-    # * attribute: event_cls
-    event_cls = CreateFrame
-
-    # * attribute: dependencies
-    dependencies = {}
-
-    # * attribute: sample_kwargs
-    sample_kwargs = {
+# ** tester: test_create_frame
+@use_tester(
+    type='domain_event',
+    target_cls=CreateFrame,
+    sample_kwargs={
         'elements': [
             {
                 'widget_type': 'box',
@@ -105,22 +96,39 @@ class TestCreateFrame(DomainEventTestBase):
                 ],
             },
         ],
-    }
+    },
+    required_params=[
+        'elements',
+    ],
+)
+class TestCreateFrame:
+    '''
+    Tests recursive Frame construction through the domain-event tester.
+    '''
 
-    # * attribute: required_params
-    required_params = ['elements']
+    # * test: missing_required_params
+    def test_missing_required_params(self, test_ctx) -> None:
+        '''
+        Test required parameters raise COMMAND_PARAMETER_REQUIRED when missing.
 
-    # * method: test_builds_frozen_nested_frame
-    def test_builds_frozen_nested_frame(self, mock_dependencies):
+        :param test_ctx: The bound domain-event tester context.
+        :type test_ctx: DomainEventTesterContext
+        '''
+
+        # Assert each required parameter is enforced.
+        test_ctx.assert_missing_required_params()
+
+    # * test: builds_frozen_nested_frame
+    def test_builds_frozen_nested_frame(self, test_ctx) -> None:
         '''
         Test recursive specifications produce a frozen Frame tree.
 
-        :param mock_dependencies: The harness-provided event dependencies.
-        :type mock_dependencies: dict
+        :param test_ctx: The bound domain-event tester context.
+        :type test_ctx: DomainEventTesterContext
         '''
 
         # Build the recursive widget specifications through DomainEvent.handle.
-        frame = self.handle(mock_dependencies)
+        frame = test_ctx.handle()
 
         # Verify the event returns a frozen Frame with materialized descendants.
         assert isinstance(frame, Frame)
@@ -141,19 +149,18 @@ class TestCreateFrame(DomainEventTestBase):
             'variant': 'contained',
         }
 
-    # * method: test_raises_for_unknown_nested_widget_type
-    def test_raises_for_unknown_nested_widget_type(self, mock_dependencies):
+    # * test: raises_for_unknown_nested_widget_type
+    def test_raises_for_unknown_nested_widget_type(self, test_ctx) -> None:
         '''
         Test unknown widget types reuse CreateElement's catalogue error.
 
-        :param mock_dependencies: The harness-provided event dependencies.
-        :type mock_dependencies: dict
+        :param test_ctx: The bound domain-event tester context.
+        :type test_ctx: DomainEventTesterContext
         '''
 
         # Build a tree that contains an unregistered child widget type.
         with pytest.raises(TiferetError) as error:
-            self.handle(
-                mock_dependencies,
+            test_ctx.handle(
                 elements=[
                     {
                         'widget_type': 'box',
@@ -165,36 +172,43 @@ class TestCreateFrame(DomainEventTestBase):
         # Verify recursive construction exposes the shared unknown-widget error.
         assert error.value.error_code == WIDGET_TYPE_NOT_FOUND_ID
 
-# ** test: TestCreateElement
-class TestCreateElement(DomainEventTestBase):
+# ** tester: test_create_element
+@use_tester(
+    type='domain_event',
+    target_cls=CreateElement,
+    sample_kwargs={'widget_type': 'button'},
+    required_params=[
+        'widget_type',
+    ],
+)
+class TestCreateElement:
     '''
-    Tests Element construction through the DomainEvent test harness.
+    Tests Element construction through the domain-event tester.
     '''
 
-    # * attribute: event_cls
-    event_cls = CreateElement
+    # * test: missing_required_params
+    def test_missing_required_params(self, test_ctx) -> None:
+        '''
+        Test required parameters raise COMMAND_PARAMETER_REQUIRED when missing.
 
-    # * attribute: dependencies
-    dependencies = {}
+        :param test_ctx: The bound domain-event tester context.
+        :type test_ctx: DomainEventTesterContext
+        '''
 
-    # * attribute: sample_kwargs
-    sample_kwargs = {'widget_type': 'button'}
+        # Assert each required parameter is enforced.
+        test_ctx.assert_missing_required_params()
 
-    # * attribute: required_params
-    required_params = ['widget_type']
-
-    # * method: test_merges_widget_defaults_props_and_children
-    def test_merges_widget_defaults_props_and_children(self, mock_dependencies):
+    # * test: merges_widget_defaults_props_and_children
+    def test_merges_widget_defaults_props_and_children(self, test_ctx) -> None:
         '''
         Test the event combines defaults, MUI properties, and nested elements.
 
-        :param mock_dependencies: The harness-provided event dependencies.
-        :type mock_dependencies: dict
+        :param test_ctx: The bound domain-event tester context.
+        :type test_ctx: DomainEventTesterContext
         '''
 
         # Create a Button with property overrides and one nested Element child.
-        element = self.handle(
-            mock_dependencies,
+        element = test_ctx.handle(
             props={
                 'children': 'Save',
                 'color': 'primary',
@@ -219,7 +233,7 @@ class TestCreateElement(DomainEventTestBase):
         assert element.children[0].type == 'TextField'
         assert element.children[0].props == {'label': 'Name'}
 
-    # * method: test_materializes_new_widget_default_types
+    # * test: materializes_new_widget_default_types
     @pytest.mark.parametrize(
         ('widget_type', 'element_type', 'default_props'),
         [
@@ -240,16 +254,16 @@ class TestCreateElement(DomainEventTestBase):
     )
     def test_materializes_new_widget_default_types(
             self,
-            mock_dependencies,
+            test_ctx,
             widget_type,
             element_type,
             default_props,
-        ):
+        ) -> None:
         '''
         Test each expanded catalog widget materializes its MUI element type.
 
-        :param mock_dependencies: The harness-provided event dependencies.
-        :type mock_dependencies: dict
+        :param test_ctx: The bound domain-event tester context.
+        :type test_ctx: DomainEventTesterContext
         :param widget_type: The catalog key used to create the Element.
         :type widget_type: str
         :param element_type: The Material UI component type expected in the Element.
@@ -259,8 +273,7 @@ class TestCreateElement(DomainEventTestBase):
         '''
 
         # Materialize the widget through the public event test-harness path.
-        element = self.handle(
-            mock_dependencies,
+        element = test_ctx.handle(
             widget_type=widget_type,
         )
 
@@ -268,54 +281,61 @@ class TestCreateElement(DomainEventTestBase):
         assert element.type == element_type
         assert element.props == default_props
 
-    # * method: test_raises_for_unrecognized_widget_type
-    def test_raises_for_unrecognized_widget_type(self, mock_dependencies):
+    # * test: raises_for_unrecognized_widget_type
+    def test_raises_for_unrecognized_widget_type(self, test_ctx) -> None:
         '''
         Test an unknown widget type raises the catalogued domain error.
 
-        :param mock_dependencies: The harness-provided event dependencies.
-        :type mock_dependencies: dict
+        :param test_ctx: The bound domain-event tester context.
+        :type test_ctx: DomainEventTesterContext
         '''
 
         # Request a widget type without any registered default shape.
         with pytest.raises(TiferetError) as error:
-            self.handle(
-                mock_dependencies,
+            test_ctx.handle(
                 widget_type='unknown',
             )
 
         # Verify the event surfaces the catalogue lookup error.
         assert error.value.error_code == WIDGET_TYPE_NOT_FOUND_ID
 
-# ** test: TestBuildCallbackTable
-class TestBuildCallbackTable(DomainEventTestBase):
+# ** tester: test_build_callback_table
+@use_tester(
+    type='domain_event',
+    target_cls=BuildCallbackTable,
+    sample_kwargs={'frame': FRAME},
+    required_params=[
+        'frame',
+    ],
+)
+class TestBuildCallbackTable:
     '''
-    Tests callback-table construction through the DomainEvent test harness.
+    Tests callback-table construction through the domain-event tester.
     '''
 
-    # * attribute: event_cls
-    event_cls = BuildCallbackTable
+    # * test: missing_required_params
+    def test_missing_required_params(self, test_ctx) -> None:
+        '''
+        Test required parameters raise COMMAND_PARAMETER_REQUIRED when missing.
 
-    # * attribute: dependencies
-    dependencies = {}
+        :param test_ctx: The bound domain-event tester context.
+        :type test_ctx: DomainEventTesterContext
+        '''
 
-    # * attribute: sample_kwargs
-    sample_kwargs = {'frame': FRAME}
+        # Assert each required parameter is enforced.
+        test_ctx.assert_missing_required_params()
 
-    # * attribute: required_params
-    required_params = ['frame']
-
-    # * method: test_builds_frozen_table_with_distinct_callback_ids
-    def test_builds_frozen_table_with_distinct_callback_ids(self, mock_dependencies):
+    # * test: builds_frozen_table_with_distinct_callback_ids
+    def test_builds_frozen_table_with_distinct_callback_ids(self, test_ctx) -> None:
         '''
         Test a tree walk registers multiple handlers under distinct identifiers.
 
-        :param mock_dependencies: The harness-provided event dependencies.
-        :type mock_dependencies: dict
+        :param test_ctx: The bound domain-event tester context.
+        :type test_ctx: DomainEventTesterContext
         '''
 
         # Build the callback table through DomainEvent.handle.
-        callback_table = self.handle(mock_dependencies)
+        callback_table = test_ctx.handle()
 
         # Verify every interactive element received a unique identifier.
         button, text = FRAME.elements[0].children
@@ -331,58 +351,66 @@ class TestBuildCallbackTable(DomainEventTestBase):
         with pytest.raises(AttributeError):
             callback_table.register('unexpected', button_handler)
 
-# ** test: TestDispatchCallback
-class TestDispatchCallback(DomainEventTestBase):
-    '''
-    Tests callback dispatch through the DomainEvent test harness.
-    '''
-
-    # * attribute: event_cls
-    event_cls = DispatchCallback
-
-    # * attribute: dependencies
-    dependencies = {}
-
-    # * attribute: sample_kwargs
-    sample_kwargs = {
+# ** tester: test_dispatch_callback
+@use_tester(
+    type='domain_event',
+    target_cls=DispatchCallback,
+    sample_kwargs={
         'callback_table': CALLBACK_TABLE,
         'payload': {
             'button_00': {'value': 'clicked'},
             'timestamp': 1788552865158,
         },
-    }
+    },
+    required_params=[
+        'callback_table',
+        'payload',
+    ],
+)
+class TestDispatchCallback:
+    '''
+    Tests callback dispatch through the domain-event tester.
+    '''
 
-    # * attribute: required_params
-    required_params = ['callback_table', 'payload']
+    # * test: missing_required_params
+    def test_missing_required_params(self, test_ctx) -> None:
+        '''
+        Test required parameters raise COMMAND_PARAMETER_REQUIRED when missing.
 
-    # * method: test_dispatches_registered_callback
-    def test_dispatches_registered_callback(self, mock_dependencies):
+        :param test_ctx: The bound domain-event tester context.
+        :type test_ctx: DomainEventTesterContext
+        '''
+
+        # Assert each required parameter is enforced.
+        test_ctx.assert_missing_required_params()
+
+    # * test: dispatches_registered_callback
+    def test_dispatches_registered_callback(self, test_ctx) -> None:
         '''
         Test the registered handler receives its payload-defined parameters.
 
-        :param mock_dependencies: The harness-provided event dependencies.
-        :type mock_dependencies: dict
+        :param test_ctx: The bound domain-event tester context.
+        :type test_ctx: DomainEventTesterContext
         '''
 
         # Dispatch the confirmed composite payload through DomainEvent.handle.
-        result = self.handle(mock_dependencies)
+        result = test_ctx.handle()
 
         # Verify the matching handler returned its interaction parameters.
         assert result == {'value': 'clicked'}
 
-    # * method: test_raises_for_unrecognized_callback_id
-    def test_raises_for_unrecognized_callback_id(self, mock_dependencies):
+    # * test: raises_for_unrecognized_callback_id
+    def test_raises_for_unrecognized_callback_id(self, test_ctx) -> None:
         '''
         Test an interaction without a registered handler is a domain error.
 
-        :param mock_dependencies: The harness-provided event dependencies.
-        :type mock_dependencies: dict
+        :param test_ctx: The bound domain-event tester context.
+        :type test_ctx: DomainEventTesterContext
         '''
 
         # Dispatch an interaction whose callback ID was not registered.
         with pytest.raises(TiferetError) as error:
-            self.handle(
-                mock_dependencies,
+            test_ctx.handle(
                 payload={
                     'unknown_00': {},
                     'timestamp': 1788552865158,
