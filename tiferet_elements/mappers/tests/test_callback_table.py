@@ -6,44 +6,21 @@
 from tiferet.testing import AggregateTestBase
 from tiferet_elements.domain import CallbackTable
 from tiferet_elements.mappers import CallbackTableAggregate
-
-# *** functions
-
-# ** function: primary_handler
-def primary_handler(**kwargs):
-    '''
-    Return primary callback parameters unchanged.
-
-    :param kwargs: Callback parameters.
-    :type kwargs: dict
-    :return: The unchanged callback parameters.
-    :rtype: dict
-    '''
-
-    # Return the callback parameters unchanged.
-    return kwargs
-
-# ** function: secondary_handler
-def secondary_handler(**kwargs):
-    '''
-    Return secondary callback parameters unchanged.
-
-    :param kwargs: Callback parameters.
-    :type kwargs: dict
-    :return: The unchanged callback parameters.
-    :rtype: dict
-    '''
-
-    # Return the callback parameters unchanged.
-    return kwargs
+from tiferet_elements.mappers.tests.conftest import primary_handler, secondary_handler
 
 # *** constants
 
 # ** constant: callback_table_sample_data
-CALLBACK_TABLE_SAMPLE_DATA = {'handlers': {'button_00': primary_handler}}
+CALLBACK_TABLE_SAMPLE_DATA = {
+    'handlers': {
+        'button_00': primary_handler,
+    },
+}
 
 # ** constant: equality_fields
-EQUALITY_FIELDS = ['handlers']
+EQUALITY_FIELDS = [
+    'handlers',
+]
 
 # *** tests
 

@@ -6,6 +6,7 @@
 from tiferet.testing import AggregateTestBase, TransferObjectTestBase
 from tiferet_elements.domain import Element, Frame
 from tiferet_elements.mappers import FrameAggregate, FrameTransferObject
+from tiferet_elements.mappers.tests.conftest import element_tree
 
 # *** constants
 
@@ -23,37 +24,13 @@ FRAME_SAMPLE_DATA = {
 }
 
 # ** constant: equality_fields
-EQUALITY_FIELDS = ['elements']
-
-# *** functions
-
-# ** function: element_tree
-def ELEMENT_TREE(element):
-    '''
-    Normalize a nested Element or element dict into a comparable tree.
-
-    :param element: The Element model or equivalent dictionary.
-    :type element: Element | dict
-    :return: The comparable recursive element tuple.
-    :rtype: tuple
-    '''
-
-    # Read the element values from either its model or serialized dictionary.
-    if isinstance(element, dict):
-        type = element['type']
-        props = element.get('props', {})
-        children = element.get('children', [])
-    else:
-        type = element.type
-        props = element.props
-        children = element.children
-
-    # Normalize each child into the same recursive shape.
-    return type, props, tuple(ELEMENT_TREE(child) for child in children)
+EQUALITY_FIELDS = [
+    'elements',
+]
 
 # ** constant: field_normalizers
 FIELD_NORMALIZERS = {
-    'elements': lambda elements: tuple(ELEMENT_TREE(element) for element in elements),
+    'elements': lambda elements: tuple(element_tree(element) for element in elements),
 }
 
 # *** tests
