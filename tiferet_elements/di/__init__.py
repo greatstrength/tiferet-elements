@@ -3,7 +3,7 @@
 # ** app
 from tiferet.domain import ServiceRegistration
 from ..assets import STATE_SERVICE_ID, STATE_SERVICE_REGISTRATION_DATA
-from .core import DIContext
+from .core import ElementsServiceResolver
 
 # *** constants
 
@@ -16,21 +16,24 @@ STATE_SERVICE_CONFIGURATION = ServiceRegistration(
 # *** functions
 
 # ** function: create_di_context
-def create_di_context() -> DIContext:
+def create_di_context() -> ElementsServiceResolver:
     '''
-    Create the default code-declared MUI dependency resolution context.
+    Create the default code-declared MUI dependency resolution context as an
+    ElementsServiceResolver.
 
-    :return: The default MUI dependency resolution context.
-    :rtype: DIContext
+    :return: The default MUI service resolver.
+    :rtype: ElementsServiceResolver
     '''
 
-    # Return the default MUI service dependency context.
-    return DIContext(service_configurations=[STATE_SERVICE_CONFIGURATION])
+    # Return the default MUI service resolver.
+    return ElementsServiceResolver(
+        service_configurations=[STATE_SERVICE_CONFIGURATION],
+    )
 
 # *** exports
 
 __all__ = [
-    'DIContext',
+    'ElementsServiceResolver',
     'STATE_SERVICE_CONFIGURATION',
     'create_di_context',
 ]

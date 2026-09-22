@@ -15,7 +15,7 @@ from tiferet.di.dependency_injector import DI_DEPENDENCY_NOT_REGISTERED_ID
 from tiferet.domain import FlaggedDependency, ServiceRegistration
 from tiferet.interfaces.core import ServiceError
 from tiferet_elements.assets import STATE_SERVICE_ID
-from tiferet_elements.di import DIContext
+from tiferet_elements.di import ElementsServiceResolver
 from tiferet_elements.interfaces import StateService
 
 # *** classes
@@ -77,7 +77,7 @@ def test_context_resolves_registered_dialect():
     )
 
     # Resolve the dependency for its registered dialect.
-    state_service = DIContext(
+    state_service = ElementsServiceResolver(
         service_configurations=[registration],
     ).get_dependency(STATE_SERVICE_ID, 'streamlit')
 
@@ -104,7 +104,7 @@ def test_context_rejects_unregistered_dialect():
 
     # Resolve an unknown dialect and verify the missing registration error.
     with pytest.raises(ServiceError) as error:
-        DIContext(
+        ElementsServiceResolver(
             service_configurations=[registration],
         ).get_dependency(STATE_SERVICE_ID, 'unknown')
 

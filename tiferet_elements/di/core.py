@@ -11,11 +11,12 @@ from tiferet.domain import ServiceRegistration
 
 # *** di
 
-# ** di: context
-class DIContext(ServiceResolver):
+# ** di: elements_service_resolver
+class ElementsServiceResolver(ServiceResolver):
     '''
-    Resolve MUI service registrations by host dialect without a configuration
-    repository, keeping prototype composition explicit and portable.
+    ElementsServiceResolver resolves MUI service registrations by host dialect
+    without a configuration repository, keeping prototype composition explicit
+    and portable.
     '''
 
     # * attribute: service_configurations
@@ -24,7 +25,7 @@ class DIContext(ServiceResolver):
     # * init
     def __init__(self, service_configurations: List[ServiceRegistration]) -> None:
         '''
-        Initialize the context with its code-declared service registrations.
+        Initialize the resolver with its code-declared service registrations.
 
         :param service_configurations: The available MUI service registrations.
         :type service_configurations: List[ServiceRegistration]
