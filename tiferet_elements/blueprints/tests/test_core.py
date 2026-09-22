@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 # ** app
+from tiferet import use_tester
 from tiferet_elements.blueprints.core import build_frame, build_handler_builder
 from tiferet_elements.domain import Frame
 
@@ -77,52 +78,6 @@ class StubDIContext:
 
 # *** tests
 
-# ** test: test_build_frame_materializes_widget_specs
-def test_build_frame_materializes_widget_specs():
-    '''
-    Test the public blueprint delegates recursive widget construction.
-    '''
-
-    # Build one nested Frame from plain consumer-facing specification data.
-    frame = build_frame(
-        elements=[
-            {
-                'widget_type': 'box',
-                'children': [
-                    {
-                        'widget_type': 'button',
-                        'props': {'children': 'Save'},
-                    },
-                ],
-            },
-        ],
-    )
-
-    # Verify the blueprint returns the materialized immutable Frame tree.
-    assert isinstance(frame, Frame)
-    assert frame.elements[0].type == 'Box'
-    assert frame.elements[0].children[0].type == 'Button'
-
-# ** test: test_handler_builder_resolves_state_and_delivers_payload
-def test_handler_builder_resolves_state_and_delivers_payload():
-    '''Test the core composition helper resolves state before building callbacks.'''
-
-    # Supply a fake resolver whose state has the latest component report.
-    state_service = StubStateService({'component': {'callback_00': {}}})
-    di_context = StubDIContext(state_service)
-    received = []
-
-    # Build and invoke a zero-argument callback using the resolved state service.
-    handler = build_handler_builder(
-        dialect='test',
-        di_context=di_context,
-    )('component', received.append)
-    handler()
-
-    # Verify the requested dialect and the retrieved payload reached the consumer.
-    assert di_context.requests == [('state_service', 'test')]
-    assert received == [{'callback_00': {}}]
-
 # ** test: test_core_import_does_not_require_streamlit
 def test_core_import_does_not_require_streamlit():
     '''Test the agnostic package and core blueprint import without Streamlit.'''
@@ -153,3 +108,84 @@ import tiferet_elements.blueprints.core
 
     # Verify the optional Streamlit dependency was never requested.
     assert result.returncode == 0, result.stderr
+
+# *** testers
+
+# ** tester: test_build_frame
+@use_tester(
+    type='generic',
+    target_cls=build_frame,
+)
+class TestBuildFrame:
+    '''
+    Tests for the public build_frame blueprint.
+    '''
+
+    # * test: build_frame_materializes_widget_specs
+    def test_build_frame_materializes_widget_specs(self, session) -> None:
+        '''
+        Test the public blueprint delegates recursive widget construction.
+
+        :param session: A fresh test session.
+        :type session: object
+        '''
+
+        # Build one nested Frame from plain consumer-facing specification data.
+        frame = session.given(
+            elements=[
+                {
+                    'widget_type': 'box',
+                    'children': [
+                        {
+                            'widget_type': 'button',
+                            'props': {
+                                'children': 'Save',
+                            },
+                        },
+                    ],
+                },
+            ],
+        ).run()
+
+        # Verify the blueprint returns the materialized immutable Frame tree.
+        assert isinstance(frame, Frame)
+        assert frame.elements[0].type == 'Box'
+        assert frame.elements[0].children[0].type == 'Button'
+
+# ** tester: test_build_handler_builder
+@use_tester(
+    type='generic',
+    target_cls=build_handler_builder,
+)
+class TestBuildHandlerBuilder:
+    '''
+    Tests for the public build_handler_builder composition helper.
+    '''
+
+    # * test: handler_builder_resolves_state_and_delivers_payload
+    def test_handler_builder_resolves_state_and_delivers_payload(self, session) -> None:
+        '''
+        Test the core composition helper resolves state before building callbacks.
+
+        :param session: A fresh test session.
+        :type session: object
+        '''
+
+        # Supply a fake resolver whose state has the latest component report.
+        state_service = StubStateService({'component': {'callback_00': {}}})
+        di_context = StubDIContext(state_service)
+        received = []
+
+        # Build the handler-builder through the bound generic target.
+        handler_builder = session.given(
+            dialect='test',
+            di_context=di_context,
+        ).run()
+
+        # Invoke a zero-argument callback using the resolved state service.
+        handler = handler_builder('component', received.append)
+        handler()
+
+        # Verify the requested dialect and the retrieved payload reached the consumer.
+        assert di_context.requests == [('state_service', 'test')]
+        assert received == [{'callback_00': {}}]
