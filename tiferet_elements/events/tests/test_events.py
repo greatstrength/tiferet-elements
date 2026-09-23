@@ -20,37 +20,7 @@ from tiferet_elements.events import (
     DispatchCallback,
 )
 from tiferet_elements.mappers import CallbackTableAggregate, FrameAggregate
-
-# *** functions
-
-# ** function: button_handler
-def button_handler(**kwargs):
-    '''
-    Return the parameters reported by a button interaction.
-
-    :param kwargs: The parameters reported by the host.
-    :type kwargs: dict
-    :return: The reported interaction parameters.
-    :rtype: dict
-    '''
-
-    # Return the parameters supplied by the host interaction.
-    return kwargs
-
-
-# ** function: text_handler
-def text_handler(**kwargs):
-    '''
-    Return the parameters reported by a text interaction.
-
-    :param kwargs: The parameters reported by the host.
-    :type kwargs: dict
-    :return: The reported interaction parameters.
-    :rtype: dict
-    '''
-
-    # Return the parameters supplied by the host interaction.
-    return kwargs
+from conftest import button_handler, text_handler
 
 
 # *** constants
