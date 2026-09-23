@@ -2,11 +2,14 @@
 
 # *** imports
 
+# ** core
+from typing import Any, Callable, Iterator, Tuple
+
 # ** app
 from tiferet.events import DomainEvent
 from .. import assets as a
-from ..domain import Element, Frame
-from ..mappers import ElementAggregate, FrameAggregate
+from ..domain import CallbackTable, Element, Frame
+from ..mappers import CallbackTableAggregate, ElementAggregate, FrameAggregate
 
 # *** events
 
@@ -117,3 +120,86 @@ class CreateFrame(DomainEvent):
             props=element_spec.get('props'),
             children=children,
         )
+
+
+# ** event: build_callback_table
+class BuildCallbackTable(DomainEvent):
+    '''Turns the callable-bearing elements of one frame into a stable, frozen
+    callback registry that the host can safely render and later dispatch.'''
+
+    # * method: execute
+    @DomainEvent.parameters_required(['frame'])
+    def execute(self, frame: Frame, **kwargs) -> CallbackTable:
+        '''
+        Build a frozen callback registry for every callable in a Frame.
+
+        :param frame: The composed frame whose callback handlers to register.
+        :type frame: Frame
+        :param kwargs: Additional event arguments.
+        :type kwargs: dict
+        :return: The immutable callback registry for the rendered frame.
+        :rtype: CallbackTable
+        '''
+
+        # Verify the callback registry is built from a composed frame.
+        self.verify(
+            expression=isinstance(frame, Frame),
+            error_code=a.CALLBACK_NOT_FOUND_ID,
+            message='A callback table can only be built from a Frame.',
+        )
+
+        # Create the mutable callback registration surface and first index.
+        callback_table = CallbackTableAggregate()
+        callback_index = 0
+
+        # Register each callable in depth-first element-tree order.
+        for element in self._walk(frame.elements):
+            handler_prop, handler = self._get_handler(element)
+            if handler is None:
+                continue
+
+            callback_id = f'callback_{callback_index:02d}'
+            callback_table.register(callback_id, handler)
+            element.props[handler_prop] = callback_id
+            element.props['callback_id'] = callback_id
+            callback_index += 1
+
+        # Return the immutable callback registry for later dispatch.
+        return callback_table.freeze()
+
+    # * method: _walk (static)
+    @staticmethod
+    def _walk(elements: list[Element]) -> Iterator[Element]:
+        '''
+        Yield every Element in depth-first, pre-order tree traversal.
+
+        :param elements: The sibling elements at the current tree level.
+        :type elements: list[Element]
+        :return: An iterator yielding each Element before its descendants.
+        :rtype: Iterator[Element]
+        '''
+
+        # Yield each element before recursively yielding its descendants.
+        for element in elements:
+            yield element
+            yield from BuildCallbackTable._walk(element.children)
+
+    # * method: _get_handler (static)
+    @staticmethod
+    def _get_handler(element: Element) -> Tuple[str | None, Callable[..., Any] | None]:
+        '''
+        Find the first callable property belonging to an Element.
+
+        :param element: The element whose properties are inspected.
+        :type element: Element
+        :return: The callable property name and handler, or empty values.
+        :rtype: Tuple[str | None, Callable[..., Any] | None]
+        '''
+
+        # Return the first callable property available on the element.
+        for prop_name, value in element.props.items():
+            if callable(value):
+                return prop_name, value
+
+        # Report that the element has no callback handler.
+        return None, None

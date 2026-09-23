@@ -9,9 +9,56 @@ import pytest
 from tiferet.assets import TiferetError
 from tiferet.testing import DomainEventTestBase
 from tiferet_elements.assets import WIDGET_TYPE_NOT_FOUND_ID
-from tiferet_elements.domain import Frame
-from tiferet_elements.events import CreateElement, CreateFrame
-from tiferet_elements.mappers import FrameAggregate
+from tiferet_elements.domain import CallbackTable, Frame
+from tiferet_elements.events import BuildCallbackTable, CreateElement, CreateFrame
+from tiferet_elements.mappers import CallbackTableAggregate, FrameAggregate
+
+# *** functions
+
+# ** function: button_handler
+def button_handler(**kwargs):
+    '''
+    Return the parameters reported by a button interaction.
+
+    :param kwargs: The parameters reported by the host.
+    :type kwargs: dict
+    :return: The reported interaction parameters.
+    :rtype: dict
+    '''
+
+    # Return the parameters supplied by the host interaction.
+    return kwargs
+
+
+# ** function: text_handler
+def text_handler(**kwargs):
+    '''
+    Return the parameters reported by a text interaction.
+
+    :param kwargs: The parameters reported by the host.
+    :type kwargs: dict
+    :return: The reported interaction parameters.
+    :rtype: dict
+    '''
+
+    # Return the parameters supplied by the host interaction.
+    return kwargs
+
+
+# *** constants
+
+# ** constant: frame
+FRAME = Frame(
+    elements=[
+        {
+            'type': 'Stack',
+            'children': [
+                {'type': 'Button', 'props': {'onClick': button_handler}},
+                {'type': 'TextField', 'props': {'onChange': text_handler}},
+            ],
+        },
+    ],
+)
 
 # *** tests
 
@@ -211,3 +258,46 @@ class TestCreateFrame(DomainEventTestBase):
 
         # Verify the delegated CreateElement error propagates unchanged.
         assert error.value.error_code == WIDGET_TYPE_NOT_FOUND_ID
+
+
+# ** test: build_callback_table
+class TestBuildCallbackTable(DomainEventTestBase):
+    '''Test callback registration from interactive frame Elements.'''
+
+    # * attribute: event_cls
+    event_cls = BuildCallbackTable
+
+    # * attribute: dependencies
+    dependencies = {}
+
+    # * attribute: sample_kwargs
+    sample_kwargs = {'frame': FRAME}
+
+    # * attribute: required_params
+    required_params = ['frame']
+
+    # * test: builds_frozen_table_with_distinct_callback_ids
+    def test_builds_frozen_table_with_distinct_callback_ids(self, mock_dependencies):
+        '''
+        Build a frozen callback registry using distinct generated IDs.
+
+        :param mock_dependencies: The mocked event dependencies.
+        :type mock_dependencies: dict
+        '''
+
+        # Register each interactive child of the composed frame.
+        callback_table = self.handle(mock_dependencies)
+        button, text = FRAME.elements[0].children
+
+        # Verify each callback received a distinct stable identifier.
+        assert button.props['callback_id'] != text.props['callback_id']
+        assert callback_table.handlers == {
+            button.props['callback_id']: button_handler,
+            text.props['callback_id']: text_handler,
+        }
+
+        # Verify registration returns an immutable domain snapshot.
+        assert isinstance(callback_table, CallbackTable)
+        assert not isinstance(callback_table, CallbackTableAggregate)
+        with pytest.raises(AttributeError):
+            callback_table.register('unexpected', button_handler)

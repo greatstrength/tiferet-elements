@@ -3,9 +3,10 @@
 # *** exports
 
 # ** app
-from .core import CreateElement, CreateFrame
+from .core import BuildCallbackTable, CreateElement, CreateFrame
 
 __all__ = [
+    'BuildCallbackTable',
     'CreateElement',
     'CreateFrame',
 ]
