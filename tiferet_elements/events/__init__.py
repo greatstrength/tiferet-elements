@@ -3,8 +3,9 @@
 # *** exports
 
 # ** app
-from .core import CreateElement
+from .core import CreateElement, CreateFrame
 
 __all__ = [
     'CreateElement',
+    'CreateFrame',
 ]

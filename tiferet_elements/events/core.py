@@ -5,8 +5,8 @@
 # ** app
 from tiferet.events import DomainEvent
 from .. import assets as a
-from ..domain import Element
-from ..mappers import ElementAggregate
+from ..domain import Element, Frame
+from ..mappers import ElementAggregate, FrameAggregate
 
 # *** events
 
@@ -62,3 +62,58 @@ class CreateElement(DomainEvent):
 
         # Return the immutable Element snapshot to the caller.
         return element.freeze()
+
+
+# ** event: create_frame
+class CreateFrame(DomainEvent):
+    '''Materialize a nested Frame from recursive widget specification data.'''
+
+    # * method: execute
+    @DomainEvent.parameters_required(['elements'])
+    def execute(self, elements: list, **kwargs) -> Frame:
+        '''
+        Create a Frame from recursive widget specifications.
+
+        :param elements: The root widget specifications to materialize.
+        :type elements: list
+        :param kwargs: Additional event arguments.
+        :type kwargs: dict
+        :return: The immutable Frame composed from the widget specifications.
+        :rtype: Frame
+        '''
+
+        # Create the mutable frame composition surface.
+        frame = FrameAggregate()
+
+        # Materialize and append every root element specification.
+        for element_spec in elements:
+            frame.add_element(self._create_element(element_spec))
+
+        # Return the immutable frame snapshot to the caller.
+        return frame.freeze()
+
+    # * method: _create_element (static)
+    @staticmethod
+    def _create_element(element_spec: dict) -> Element:
+        '''
+        Recursively materialize an Element from one widget specification.
+
+        :param element_spec: The widget specification to materialize.
+        :type element_spec: dict
+        :return: The immutable Element represented by the specification.
+        :rtype: Element
+        '''
+
+        # Materialize nested child specifications before their parent node.
+        children = [
+            CreateFrame._create_element(child)
+            for child in element_spec.get('children', [])
+        ]
+
+        # Delegate widget defaults and error handling to CreateElement.
+        return DomainEvent.handle(
+            CreateElement,
+            widget_type=element_spec['widget_type'],
+            props=element_spec.get('props'),
+            children=children,
+        )

@@ -9,7 +9,9 @@ import pytest
 from tiferet.assets import TiferetError
 from tiferet.testing import DomainEventTestBase
 from tiferet_elements.assets import WIDGET_TYPE_NOT_FOUND_ID
-from tiferet_elements.events import CreateElement
+from tiferet_elements.domain import Frame
+from tiferet_elements.events import CreateElement, CreateFrame
+from tiferet_elements.mappers import FrameAggregate
 
 # *** tests
 
@@ -122,4 +124,90 @@ class TestCreateElement(DomainEventTestBase):
             )
 
         # Verify the error code identifies the missing widget catalog entry.
+        assert error.value.error_code == WIDGET_TYPE_NOT_FOUND_ID
+
+
+# ** test: create_frame
+class TestCreateFrame(DomainEventTestBase):
+    '''Test recursive Frame materialization from widget specifications.'''
+
+    # * attribute: event_cls
+    event_cls = CreateFrame
+
+    # * attribute: dependencies
+    dependencies = {}
+
+    # * attribute: sample_kwargs
+    sample_kwargs = {
+        'elements': [
+            {
+                'widget_type': 'box',
+                'children': [
+                    {
+                        'widget_type': 'button',
+                        'props': {'children': 'Save'},
+                    },
+                ],
+            },
+        ],
+    }
+
+    # * attribute: required_params
+    required_params = ['elements']
+
+    # * test: builds_frozen_nested_frame
+    def test_builds_frozen_nested_frame(self, mock_dependencies):
+        '''
+        Build an immutable Frame containing recursively materialized Elements.
+
+        :param mock_dependencies: The mocked event dependencies.
+        :type mock_dependencies: dict
+        '''
+
+        # Materialize the configured recursive widget specification.
+        frame = self.handle(mock_dependencies)
+
+        # Verify the event returns an immutable Frame instead of its aggregate.
+        assert isinstance(frame, Frame)
+        assert not isinstance(frame, FrameAggregate)
+
+        # Verify the root Box defaults and nested Button override were composed.
+        assert frame.elements[0].type == 'Box'
+        assert frame.elements[0].props == {
+            'component': 'div',
+            'sx': {
+                'border': '1px solid',
+                'borderColor': 'divider',
+                'borderRadius': 1,
+                'p': 2,
+            },
+        }
+        assert frame.elements[0].children[0].type == 'Button'
+        assert frame.elements[0].children[0].props == {
+            'children': 'Save',
+            'variant': 'contained',
+        }
+
+    # * test: raises_for_unknown_nested_widget_type
+    def test_raises_for_unknown_nested_widget_type(self, mock_dependencies):
+        '''
+        Propagate the catalog error from an unknown nested widget type.
+
+        :param mock_dependencies: The mocked event dependencies.
+        :type mock_dependencies: dict
+        '''
+
+        # Materialize a tree containing an unknown child widget specification.
+        with pytest.raises(TiferetError) as error:
+            self.handle(
+                mock_dependencies,
+                elements=[
+                    {
+                        'widget_type': 'box',
+                        'children': [{'widget_type': 'unknown'}],
+                    },
+                ],
+            )
+
+        # Verify the delegated CreateElement error propagates unchanged.
         assert error.value.error_code == WIDGET_TYPE_NOT_FOUND_ID
