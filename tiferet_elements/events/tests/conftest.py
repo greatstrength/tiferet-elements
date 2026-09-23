@@ -11,7 +11,6 @@ from tiferet.testing import register_event_hooks
 def pytest_generate_tests(metafunc):
     register_event_hooks(metafunc)
 
-
 # ** function: button_handler
 def button_handler(**kwargs):
     '''
@@ -25,7 +24,6 @@ def button_handler(**kwargs):
 
     # Return the parameters supplied by the host interaction.
     return kwargs
-
 
 # ** function: text_handler
 def text_handler(**kwargs):

@@ -22,7 +22,6 @@ from tiferet_elements.events import (
 from tiferet_elements.mappers import CallbackTableAggregate, FrameAggregate
 from conftest import button_handler, text_handler
 
-
 # *** constants
 
 # ** constant: frame
@@ -156,7 +155,6 @@ class TestCreateElement(DomainEventTestBase):
         # Verify the error code identifies the missing widget catalog entry.
         assert error.value.error_code == WIDGET_TYPE_NOT_FOUND_ID
 
-
 # ** test: create_frame
 class TestCreateFrame(DomainEventTestBase):
     '''Test recursive Frame materialization from widget specifications.'''
@@ -242,7 +240,6 @@ class TestCreateFrame(DomainEventTestBase):
         # Verify the delegated CreateElement error propagates unchanged.
         assert error.value.error_code == WIDGET_TYPE_NOT_FOUND_ID
 
-
 # ** test: build_callback_table
 class TestBuildCallbackTable(DomainEventTestBase):
     '''Test callback registration from interactive frame Elements.'''
@@ -284,7 +281,6 @@ class TestBuildCallbackTable(DomainEventTestBase):
         assert not isinstance(callback_table, CallbackTableAggregate)
         with pytest.raises(AttributeError):
             callback_table.register('unexpected', button_handler)
-
 
 # ** test: dispatch_callback
 class TestDispatchCallback(DomainEventTestBase):

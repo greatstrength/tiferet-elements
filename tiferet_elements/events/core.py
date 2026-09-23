@@ -66,7 +66,6 @@ class CreateElement(DomainEvent):
         # Return the immutable Element snapshot to the caller.
         return element.freeze()
 
-
 # ** event: create_frame
 class CreateFrame(DomainEvent):
     '''Materialize a nested Frame from recursive widget specification data.'''
@@ -120,7 +119,6 @@ class CreateFrame(DomainEvent):
             props=element_spec.get('props'),
             children=children,
         )
-
 
 # ** event: build_callback_table
 class BuildCallbackTable(DomainEvent):
@@ -203,7 +201,6 @@ class BuildCallbackTable(DomainEvent):
 
         # Report that the element has no callback handler.
         return None, None
-
 
 # ** event: dispatch_callback
 class DispatchCallback(DomainEvent):
