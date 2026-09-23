@@ -1,12 +1,12 @@
 name: Publish Python Package
 
 on:
-  push:
-    tags:
-      - 'v*'
-      - '!v*b*'
   release:
     types: [published]
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
