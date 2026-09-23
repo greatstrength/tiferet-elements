@@ -43,8 +43,8 @@ class StubStateService:
         # Return the stored value for the requested key.
         return self.values[key]
 
-# ** class: stub_di_context
-class StubDIContext:
+# ** class: stub_service_resolver
+class StubServiceResolver:
     '''Record dependency requests while returning a deterministic state service.'''
 
     # * init
@@ -119,18 +119,18 @@ def test_handler_builder_resolves_state_and_delivers_payload():
     state_service = StubStateService(
         {'component': {'callback_00': {}}},
     )
-    di_context = StubDIContext(state_service)
+    service_resolver = StubServiceResolver(state_service)
     received = []
     handler = build_handler_builder(
         dialect='test',
-        di_context=di_context,
+        service_resolver=service_resolver,
     )('component', received.append)
 
     # Invoke the zero-argument host handler to dispatch the latest state.
     handler()
 
     # Verify resolution occurs once and the callback receives the payload.
-    assert di_context.requests == [('state_service', 'test')]
+    assert service_resolver.requests == [('state_service', 'test')]
     assert received == [{'callback_00': {}}]
 
 # ** test: core_import_does_not_require_streamlit

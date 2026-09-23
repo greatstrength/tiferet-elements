@@ -21,28 +21,28 @@ if TYPE_CHECKING:
 # ** function: build_handler_builder
 def build_handler_builder(
         dialect: str = 'streamlit',
-        di_context: Any = None,
+        service_resolver: Any = None,
     ) -> Callable[[str, Callable[[Any], Any]], Callable[[], Any]]:
     '''
     Compose host callbacks that retrieve their latest state on invocation.
 
     :param dialect: The host dialect used to resolve the state service.
     :type dialect: str
-    :param di_context: An optional dependency resolver override.
-    :type di_context: Any
+    :param service_resolver: An optional service resolver override.
+    :type service_resolver: Any
     :return: A function that builds state-aware host callback handlers.
     :rtype: Callable[[str, Callable[[Any], Any]], Callable[[], Any]]
     '''
 
     # Resolve the supplied dependency resolver or compose the default resolver.
-    di_context = (
-        di_context
-        if di_context is not None
+    service_resolver = (
+        service_resolver
+        if service_resolver is not None
         else create_elements_service_resolver()
     )
 
     # Resolve the dialect-specific state service once for all built handlers.
-    state_service = di_context.get_dependency(STATE_SERVICE_ID, dialect)
+    state_service = service_resolver.get_dependency(STATE_SERVICE_ID, dialect)
 
     # Build a host handler for one component key and domain callback.
     def build_handler(
