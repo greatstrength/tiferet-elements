@@ -3,7 +3,7 @@
 # *** imports
 
 # ** core
-from typing import Any, Callable, Iterator, Tuple
+from typing import Any, Callable, Dict, Iterator, Tuple
 
 # ** app
 from tiferet.events import DomainEvent
@@ -203,3 +203,71 @@ class BuildCallbackTable(DomainEvent):
 
         # Report that the element has no callback handler.
         return None, None
+
+
+# ** event: dispatch_callback
+class DispatchCallback(DomainEvent):
+    '''Delivers one reported interaction to the handler registered for its callback identifier, making unclaimed interactions explicit domain errors.'''
+
+    # * method: execute
+    @DomainEvent.parameters_required(['callback_table', 'payload'])
+    def execute(
+            self,
+            callback_table: CallbackTable,
+            payload: Dict[str, Any],
+            **kwargs,
+        ) -> Any:
+        '''
+        Dispatch a reported interaction to its registered callback handler.
+
+        :param callback_table: The callback registry for the rendered frame.
+        :type callback_table: CallbackTable
+        :param payload: The reported callback identifier, parameters, and timestamp.
+        :type payload: Dict[str, Any]
+        :param kwargs: Additional event arguments.
+        :type kwargs: dict
+        :return: The resolved handler result.
+        :rtype: Any
+        '''
+
+        # Verify the host reported the callback interaction as a mapping.
+        self.verify(
+            expression=isinstance(payload, dict),
+            error_code=a.CALLBACK_NOT_FOUND_ID,
+            message='A callback payload must be a mapping.',
+        )
+
+        # Verify the host supplied the interaction timestamp.
+        self.verify(
+            expression='timestamp' in payload,
+            error_code=a.CALLBACK_NOT_FOUND_ID,
+            message='A callback payload must include a timestamp.',
+        )
+
+        # Resolve the reported callback entry apart from its timestamp.
+        callback_entries = [
+            (callback_id, parameters)
+            for callback_id, parameters in payload.items()
+            if callback_id != 'timestamp'
+        ]
+
+        # Verify the reported interaction identifies exactly one callback.
+        self.verify(
+            expression=len(callback_entries) == 1,
+            error_code=a.CALLBACK_NOT_FOUND_ID,
+            message='A callback payload must contain exactly one callback_id.',
+        )
+
+        # Resolve the callback identifier and parameters from the entry.
+        callback_id, parameters = callback_entries[0]
+
+        # Retrieve the handler registered for the reported callback identifier.
+        handler = callback_table.handlers.get(callback_id)
+        if handler is None:
+            self.raise_error(
+                a.CALLBACK_NOT_FOUND_ID,
+                callback_id=callback_id,
+            )
+
+        # Dispatch the host-supplied parameters to the resolved handler.
+        return handler(**parameters)

@@ -8,9 +8,17 @@ import pytest
 # ** app
 from tiferet.assets import TiferetError
 from tiferet.testing import DomainEventTestBase
-from tiferet_elements.assets import WIDGET_TYPE_NOT_FOUND_ID
+from tiferet_elements.assets import (
+    CALLBACK_NOT_FOUND_ID,
+    WIDGET_TYPE_NOT_FOUND_ID,
+)
 from tiferet_elements.domain import CallbackTable, Frame
-from tiferet_elements.events import BuildCallbackTable, CreateElement, CreateFrame
+from tiferet_elements.events import (
+    BuildCallbackTable,
+    CreateElement,
+    CreateFrame,
+    DispatchCallback,
+)
 from tiferet_elements.mappers import CallbackTableAggregate, FrameAggregate
 
 # *** functions
@@ -58,6 +66,11 @@ FRAME = Frame(
             ],
         },
     ],
+)
+
+# ** constant: callback_table
+CALLBACK_TABLE = CallbackTable(
+    handlers={'button_00': button_handler},
 )
 
 # *** tests
@@ -301,3 +314,63 @@ class TestBuildCallbackTable(DomainEventTestBase):
         assert not isinstance(callback_table, CallbackTableAggregate)
         with pytest.raises(AttributeError):
             callback_table.register('unexpected', button_handler)
+
+
+# ** test: dispatch_callback
+class TestDispatchCallback(DomainEventTestBase):
+    '''Test callback lookup and handler dispatch from reported interactions.'''
+
+    # * attribute: event_cls
+    event_cls = DispatchCallback
+
+    # * attribute: dependencies
+    dependencies = {}
+
+    # * attribute: sample_kwargs
+    sample_kwargs = {
+        'callback_table': CALLBACK_TABLE,
+        'payload': {
+            'button_00': {'value': 'clicked'},
+            'timestamp': 1788552865158,
+        },
+    }
+
+    # * attribute: required_params
+    required_params = ['callback_table', 'payload']
+
+    # * test: dispatches_registered_callback
+    def test_dispatches_registered_callback(self, mock_dependencies):
+        '''
+        Dispatch a reported callback to its registered handler.
+
+        :param mock_dependencies: The mocked event dependencies.
+        :type mock_dependencies: dict
+        '''
+
+        # Dispatch the registered callback payload through the event.
+        result = self.handle(mock_dependencies)
+
+        # Verify the handler result preserves the reported parameters.
+        assert result == {'value': 'clicked'}
+
+    # * test: raises_for_unrecognized_callback_id
+    def test_raises_for_unrecognized_callback_id(self, mock_dependencies):
+        '''
+        Raise the callback-not-found error for an unregistered identifier.
+
+        :param mock_dependencies: The mocked event dependencies.
+        :type mock_dependencies: dict
+        '''
+
+        # Dispatch an unknown callback and capture the structured error.
+        with pytest.raises(TiferetError) as error:
+            self.handle(
+                mock_dependencies,
+                payload={
+                    'unknown_00': {},
+                    'timestamp': 1788552865158,
+                },
+            )
+
+        # Verify the error code identifies the unresolved callback.
+        assert error.value.error_code == CALLBACK_NOT_FOUND_ID
